@@ -73,3 +73,35 @@ then re-run the build script, which regenerates both this folder and the
 shareable Claude artifact from that one source:
 
     python3 build.py
+
+---
+
+## Adding your stitching / leather footage
+
+The site has a video slot ready in **The Seam** section. Right now it plays a
+cross-dissolve of your macro photography; drop in real footage and the video
+takes over automatically.
+
+1. Put the file next to `index.html`, e.g. `stitching.mp4`.
+2. In `index.html`, find `id="seamVideo"` and add one line inside the tag:
+
+       <video class="seam__v" id="seamVideo" muted loop playsinline preload="none">
+         <source src="stitching.mp4" type="video/mp4">
+       </video>
+
+That's it. If the file is missing or won't play, it silently falls back to the
+stills — so it can never leave a blank section.
+
+**What to shoot** (phone is fine, shoot horizontal):
+- Needle going through leather, close and slow — 10s
+- Hands guiding a panel through the machine — 10s
+- A finished seat cover being pulled taut over foam — 8s
+- Cutting table, blade following the pattern — 8s
+
+**Encoding:** H.264 MP4, 1920x1080 or 1280x720, no audio track, 8-15 seconds,
+under ~3 MB each. Keep it muted and looping — it is background texture, not a
+film. If you have HEVC/.MOV from an iPhone, it needs converting to H.264 or
+Chrome and Firefox will not play it.
+
+Do not use stock footage of someone else's factory. An OEM buyer who recognises
+it is a problem you do not want.
