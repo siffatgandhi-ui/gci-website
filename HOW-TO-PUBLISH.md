@@ -105,3 +105,26 @@ Chrome and Firefox will not play it.
 
 Do not use stock footage of someone else's factory. An OEM buyer who recognises
 it is a problem you do not want.
+
+---
+
+## Media credits & licensing
+
+`media/` contains three atmosphere clips sourced from **Pexels**, whose licence
+permits commercial use without attribution:
+
+| File | Subject | Source |
+|---|---|---|
+| `stitch-machine.mp4` | Sewing machine, needle and presser foot | pexels.com/video/8170061 |
+| `leather-hand.mp4` | Hand-stitching leather pieces | pexels.com/video/4456103 |
+| `cabin.mp4` | Car interior, leather seat detail | pexels.com/video/6157907 |
+
+These are **atmosphere, not documentation** — they are never captioned as GCI's
+own floor or product. Every product card, every factory tile and every figure on
+the site is GCI's own material from the brochure.
+
+Replace any of these with real GCI footage whenever you have it: keep the same
+filename in `media/` and nothing else needs to change. Doing so is a straight
+upgrade — your own line is always more persuasive to a buyer than stock.
+
+Keep the attribution table above accurate if you swap files in or out.
