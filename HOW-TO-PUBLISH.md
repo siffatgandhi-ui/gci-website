@@ -67,12 +67,12 @@ link previews resolve correctly:
 Don't hand-edit `index.html` — the images are inlined as base64 and it's a
 1 MB file. Edit the source instead:
 
-    ~/Desktop/GCI_Website_v2_source-no-images.html   (52 KB, images are @@tokens@@)
+    ~/Desktop/GCI_Website_v3_source-no-images.html   (~60 KB, images are @@tokens@@)
 
 then re-run the build script, which regenerates both this folder and the
 shareable Claude artifact from that one source:
 
-    python3 build.py
+    python3 ~/Desktop/GCI_build.py
 
 ---
 
