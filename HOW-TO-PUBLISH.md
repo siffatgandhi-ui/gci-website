@@ -128,3 +128,23 @@ filename in `media/` and nothing else needs to change. Doing so is a straight
 upgrade — your own line is always more persuasive to a buyer than stock.
 
 Keep the attribution table above accurate if you swap files in or out.
+
+---
+
+## Typefaces
+
+Three tiers, deliberately distinct so a heading always reads as a heading:
+
+| Role | Face | Notes |
+|---|---|---|
+| Headings, display figures | **Archivo** (variable) | Embedded in the page as a base64 woff2. Width axis 104–118 and weight 700–800 do the work. |
+| Body copy | Helvetica Neue | Brand guideline face, unchanged. |
+| Labels, specs, item codes | System monospace | Unchanged. |
+
+Archivo is licensed under the **SIL Open Font License 1.1** — free for commercial
+use and embedding. Source: fonts.google.com/specimen/Archivo.
+
+**Note for Curly Concept:** the 2026 brand guideline specifies Helvetica Bold for
+headlines. Archivo is a deliberate deviation, requested to give headings more
+presence. The logo wordmark still uses Helvetica exactly as specified. Worth a
+sign-off before this becomes the standard.
