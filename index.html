@@ -478,6 +478,53 @@ p{margin:0}
 .foot p b{color:var(--o);font-weight:400}
 
 /* ============================================================
+   TURBULENCE
+   Airframe judder applied to content containers only — never to an
+   ancestor of the sticky rail or the fixed nav, because a transform on
+   those would break their positioning.
+   Displacement is hard-capped: +/-4px and +/-0.75deg.
+   ============================================================ */
+.turb{
+  transform:translate3d(var(--tx,0px),var(--ty,0px),0) rotate(var(--rz,0deg));
+  will-change:transform;
+}
+#road{transform:rotate(var(--roll,0deg)) scale(1.06);transform-origin:50% 42%}
+
+/* cabin shudder — a faint pressure ripple at the frame edge */
+#shake{
+  position:fixed;inset:0;z-index:4;pointer-events:none;opacity:var(--turb,0);
+  box-shadow:inset 0 0 clamp(60px,9vw,130px) rgba(10,9,9,.92);
+  transition:opacity .4s ease;
+}
+
+/* fasten-seatbelt / turbulence caution */
+.caution{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(10,9,9,.86);border:1px solid var(--line);border-radius:3px;
+  padding:7px 11px;opacity:.35;transition:opacity .35s ease,border-color .35s ease;
+}
+.caution.on{opacity:1;border-color:rgba(241,108,43,.6)}
+.caution svg{display:block;flex:0 0 auto}
+.caution span{font-family:var(--fm);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+.caution.on span{color:var(--o)}
+.caution i{display:block;width:7px;height:7px;border-radius:50%;background:#2A2524;transition:background .3s,box-shadow .3s}
+.caution.on i{background:var(--o);box-shadow:0 0 9px var(--o)}
+
+/* artificial horizon */
+.adi{position:relative;width:var(--hud);height:var(--hud);pointer-events:auto}
+.adi svg{display:block;width:100%;height:100%;filter:drop-shadow(0 8px 26px rgba(0,0,0,.75))}
+@media(max-width:520px){.adi{display:none}}
+
+@media(prefers-reduced-motion:reduce){
+  .turb{transform:none!important}
+  #road{transform:none!important}
+  #shake{opacity:0!important}
+}
+.nomotion .turb{transform:none!important}
+.nomotion #road{transform:none!important}
+.nomotion #shake{opacity:0!important}
+
+/* ============================================================
    FILM GRAIN — filmic tooth over the whole drive
    ============================================================ */
 #grain{
@@ -579,6 +626,7 @@ p{margin:0}
 <!-- ======================= THE ROAD ======================= -->
 <canvas id="road" aria-hidden="true"></canvas>
 <div id="grain" aria-hidden="true"></div>
+<div id="shake" aria-hidden="true"></div>
 <div id="roadveil" aria-hidden="true"></div>
 
 <!-- ======================= GEAR SELECTOR ======================= -->
@@ -607,6 +655,41 @@ p{margin:0}
     </svg>
     <div class="hud__read"><b id="spd">0</b><span>KM/H</span></div>
   </div>
+  <div class="adi" aria-hidden="true">
+    <svg viewBox="0 0 200 200">
+      <defs>
+        <clipPath id="adiClip"><circle cx="100" cy="100" r="78"/></clipPath>
+      </defs>
+      <circle cx="100" cy="100" r="94" fill="rgba(10,9,9,.86)" stroke="rgba(255,255,255,.14)" stroke-width="1.5"/>
+      <g clip-path="url(#adiClip)">
+        <g id="adiBall">
+          <rect x="-140" y="-160" width="480" height="260" fill="#1E2A33"/>
+          <rect x="-140" y="100" width="480" height="300" fill="#2A211B"/>
+          <line x1="-140" y1="100" x2="340" y2="100" stroke="#F5F3F2" stroke-width="2.4"/>
+          <g stroke="rgba(245,243,242,.55)" stroke-width="1.6">
+            <line x1="76" y1="70" x2="124" y2="70"/><line x1="84" y1="85" x2="116" y2="85"/>
+            <line x1="84" y1="115" x2="116" y2="115"/><line x1="76" y1="130" x2="124" y2="130"/>
+          </g>
+        </g>
+      </g>
+      <circle cx="100" cy="100" r="78" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="1"/>
+      <!-- fixed aircraft reference -->
+      <g stroke="#F16C2B" stroke-width="3.4" stroke-linecap="round">
+        <line x1="62" y1="100" x2="86" y2="100"/><line x1="114" y1="100" x2="138" y2="100"/>
+      </g>
+      <circle cx="100" cy="100" r="3.2" fill="#F16C2B"/>
+      <path d="M100 24 L94 34 L106 34 Z" fill="#F16C2B"/>
+    </svg>
+  </div>
+
+  <div class="caution" id="caution">
+    <i></i>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:currentColor">
+      <path d="M5 10a7 7 0 0 1 14 0v3l1 4H4l1-4z" stroke="#8B8582"/>
+    </svg>
+    <span id="cautionT">Smooth air</span>
+  </div>
+
   <div class="hud__strip">
     <span class="hud__sec" id="hudSec">P · START</span>
     <span class="bar"><i id="hudBar"></i></span>
@@ -1289,12 +1372,83 @@ p{margin:0}
     if(kmh < 0.4) kmh = 0;
     setDial(kmh);
 
-    if(motion) road.draw(Math.abs(S.smooth));
+    if(motion){ turb.update(Math.abs(S.smooth)); road.draw(Math.abs(S.smooth)); }
     raf(frame);
   }
 
   /* static road for reduced-motion / motion-off: draw once */
   function staticRoad(){ road.draw(0); }
+
+  /* =========================================================
+     TURBULENCE
+     Scroll velocity is the gust source; a pair of detuned sines gives
+     the airframe its own idle shudder so it never looks mechanical.
+     Everything is clamped, so it can be felt but not endured.
+     ========================================================= */
+  var turb = (function(){
+    var root = document.documentElement,
+        shakeEl = document.getElementById("shake"),
+        adiBall = document.getElementById("adiBall"),
+        caution = document.getElementById("caution"),
+        cautionT = document.getElementById("cautionT");
+
+    /* content containers only — never an ancestor of the sticky rail or fixed nav */
+    var targets = [].slice.call(document.querySelectorAll("main .shell, .seam__in, .odos"));
+    targets.forEach(function(el){ el.classList.add("turb"); });
+
+    var t = 0, level = 0, pitch = 0, roll = 0, warned = false;
+    var MAX_XY = 4, MAX_RZ = 0.75, MAX_ROLL = 1.6, MAX_PITCH = 9;
+
+    function clamp(v, m){ return v < -m ? -m : (v > m ? m : v); }
+
+    function update(speed){
+      t += 0.016;
+      /* gust = sustained scroll energy, plus a constant low-level shudder */
+      var gust = Math.min(1, speed / 34);
+      level += ((gust * 0.85 + 0.15) - level) * 0.07;
+
+      var n1 = Math.sin(t * 13.1) * Math.sin(t * 4.7),
+          n2 = Math.sin(t * 9.3 + 1.7) * Math.sin(t * 3.1),
+          n3 = Math.sin(t * 6.1 + 0.4);
+
+      var tx = clamp(n1 * MAX_XY * level, MAX_XY),
+          ty = clamp(n2 * MAX_XY * level, MAX_XY),
+          rz = clamp(n3 * MAX_RZ * level, MAX_RZ);
+
+      root.style.setProperty("--tx", tx.toFixed(2) + "px");
+      root.style.setProperty("--ty", ty.toFixed(2) + "px");
+      root.style.setProperty("--rz", rz.toFixed(3) + "deg");
+
+      /* the road banks with the airframe */
+      roll  += (clamp(n3 * MAX_ROLL * level, MAX_ROLL) - roll) * 0.08;
+      pitch += (clamp(n2 * MAX_PITCH * level, MAX_PITCH) - pitch) * 0.08;
+      root.style.setProperty("--roll", roll.toFixed(3) + "deg");
+      root.style.setProperty("--turb", (level * 0.55).toFixed(3));
+
+      if(adiBall){
+        adiBall.setAttribute("transform",
+          "rotate(" + (-roll * 3.4).toFixed(2) + " 100 100) translate(0 " + pitch.toFixed(2) + ")");
+      }
+
+      var rough = level > 0.55;
+      if(rough !== warned){
+        warned = rough;
+        if(caution) caution.classList.toggle("on", rough);
+        if(cautionT) cautionT.textContent = rough ? "Turbulence" : "Smooth air";
+      }
+    }
+
+    function rest(){
+      root.style.setProperty("--tx","0px"); root.style.setProperty("--ty","0px");
+      root.style.setProperty("--rz","0deg"); root.style.setProperty("--roll","0deg");
+      root.style.setProperty("--turb","0");
+      if(adiBall) adiBall.setAttribute("transform","");
+      if(caution) caution.classList.remove("on");
+      if(cautionT) cautionT.textContent = "Smooth air";
+    }
+
+    return { update: update, rest: rest };
+  })();
 
   /* =========================================================
      FILM GRAIN — one small noise tile, generated once
@@ -1432,6 +1586,7 @@ p{margin:0}
        if it is throttled, delayed or unavailable, the road must still be there. */
     readScroll(); navTick(); updateSection(); lightSections(); trackTick(); railTick();
     staticRoad(); setDial(0);
+    if(!motion) turb.rest();
 
     if(motion){ raf(frame); }
     /* Scroll listener is the fallback path when the loop is not running. */
@@ -1454,7 +1609,7 @@ p{margin:0}
       document.documentElement.classList.toggle("nomotion", !motion);
       mb.setAttribute("aria-pressed", motion ? "false" : "true");
       mb.textContent = motion ? "Motion on" : "Motion off";
-      if(motion){ raf(frame); } else { staticRoad(); setDial(0); railTick(); }
+      if(motion){ raf(frame); } else { turb.rest(); staticRoad(); setDial(0); railTick(); }
     });
   }
   var bp = document.getElementById("bbPause"), bb = document.querySelector(".bb");

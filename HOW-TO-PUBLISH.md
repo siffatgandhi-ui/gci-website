@@ -148,3 +148,25 @@ use and embedding. Source: fonts.google.com/specimen/Archivo.
 headlines. Archivo is a deliberate deviation, requested to give headings more
 presence. The logo wordmark still uses Helvetica exactly as specified. Worth a
 sign-off before this becomes the standard.
+
+---
+
+## Turbulence
+
+The airframe judder is scroll-velocity driven and hard-capped at **±4px and
+±0.75°** — felt, but well short of anything punishing. It drives three things:
+
+- **Attitude indicator** in the cluster, which banks and pitches with the airframe
+- **Road** banks with it (the canvas rotates, capped at ±1.6°)
+- **Caution lamp** switches between "Smooth air" and "Turbulence" above a threshold
+
+It is applied only to content containers — never to an ancestor of the sticky
+product rail or the fixed nav, because a transform on those would break their
+positioning. `prefers-reduced-motion` disables it entirely, and the **Motion**
+toggle in the cluster settles the airframe to level.
+
+**A caution of a different kind:** GCI sells reliability — "the gap we filled was
+reliability", "Most Trusted Partner". Instability is the opposite signal to send a
+procurement engineer. If the site is going in front of an OEM buyer, consider
+turning the amplitude down (`MAX_XY`, `MAX_RZ` in the turbulence block) or
+switching motion off by default.
